@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SJC Cases Summary</title>
+    <!-- Include DataTables CSS -->
+    <link rel="stylesheet" type="text/css" 
+    href="https://cdn.datatables.net/v/dt/dt-1.11.5/datatables.min.css"/>
+    <!-- Include jQuery UI CSS for auto-complete -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <!-- Include custom styles -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .filter-label {
+            margin-right: 10px;
+        }
+        .filter-input {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SJC Cases Summary</h1>
+    <!-- Filter Inputs -->
+    <div class="filter-input">
+        <label class="filter-label" for="summary-search">Search Summary:</label>
+        <input type="text" id="summary-search" placeholder="Type to search...">
+    </div>
+    <div class="filter-input">
+        <label class="filter-label" for="tags-search">Search Tags:</label>
+        <input type="text" id="tags-search" placeholder="Type to search tags...">
+    </div>
+    <!-- Data Table -->
+    <table id="cases-table" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Case Number</th>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Presbytery</th>
+                <th>Summary</th>
+                <th>Decision</th>
+                <th>Tags</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be populated by JavaScript -->
+        </tbody>
+    </table>
+    <!-- Include jQuery, jQuery UI, and DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script 
+    src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <script 
+    type="text/javascript" 
+    src="https://cdn.datatables.net/v/dt/dt-1.11.5/datatables.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script type="text/javascript">
+        // Load the JSON data
+        $.getJSON('data.json', function(data) {
+            // Initialize DataTable
+            var table = $('#cases-table').DataTable({
+                data: data,
+                columns: [
+                    { data: 'Case Number' },
+                    { data: 'Title' },
+                    { data: 'Year' },
+                    { data: 'Presbytery' },
+                    { data: 'Summary' },
+                    { data: 'Decision' },
+                    { data: 'Tags' }
+                ]
+            });
+
+            // Set up auto-complete for Tags
+            var allTags = [];
+            data.forEach(function(item) {
+                var tags = item.Tags.split(',').map(function(tag) {
+                    return tag.trim();
+                });
+                allTags = allTags.concat(tags);
+            });
+            allTags = [...new Set(allTags)]; // Remove duplicates
+
+            $("#tags-search").autocomplete({
+                source: allTags,
+                select: function(event, ui) {
+                    $('#tags-search').val(ui.item.value);
+                    table.column(6).search(ui.item.value).draw();
+                    return false;
+                }
+            });
+
+            // Summary search
+            $('#summary-search').on('keyup', function() {
+                table.column(4).search(this.value).draw();
+            });
+
+            // Tags search
+            $('#tags-search').on('keyup', function() {
+                table.column(6).search(this.value).draw();
+            });
+        });
+    </script>
+</body>
+</html>
+
